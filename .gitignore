@@ -52,7 +52,6 @@
 
 # Build directories
 build/
-out/
 Build/
 build-*/
 
@@ -82,3 +81,11 @@ Testing/
 
 #ImgUi generated files
 imgui.ini
+
+# .exe exeption
+out/*
+!out/build/
+out/build/*
+!out/build/graphic2/
+out/build/graphic2/*
+!out/build/graphic2/graphic2.exe

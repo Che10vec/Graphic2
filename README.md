@@ -10,12 +10,9 @@ A small C++ OpenGL demo that loads and renders two glTF models(third-party) with
 - Keyboard + mouse controls
 - ImGui panel for transformations
 
-## Video demo
+## Demo (gif, link to a video)
 
-<video controls>
-  <source src="demo.mp4" type="video/mp4" />
-  <img src="demo.gif" alt="Demo preview"/>
-</video>
+[![Demo preview](./demo.gif)](./demo.mp4)
 
 ## Tool stack
 Prerequisite
@@ -59,10 +56,11 @@ After a succesful build, from the project root
 ```bash
 ./out/build/graphic2/graphic2
 ```
-On Windows with MinGW this is typically
+On Windows it is typically
 ```bash
 .\out\build\graphic2\graphic2.exe
 ```
+[A quick link to graphic2.exe](./out/build/graphic2/graphic2.exe)
 
 ## Controls
 
@@ -72,13 +70,13 @@ On Windows with MinGW this is typically
 - `Space` - move up
 - `Left Ctrl` - move down
 - `Mouse move` - look around
-- `Mouse wheel` - camera forward/back offset
+- `Mouse wheel` - projection blend
 
 ImGui **Controls** window:
 - _Per-model_ transformations
   - Translation
   - Rotation
-  - Scale
+  - Scale (+ mirror)
 - Lighting
   - Ambient intensity (also changes defult buffer color)
   - _Per-light-source_ transformations

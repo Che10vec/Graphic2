@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    std::filesystem::path root = PROJECT_ROOT_DIR;
+    std::filesystem::path root = (std::filesystem::current_path() / ".." / ".." / "..").lexically_normal();
     const std::filesystem::path vsPath = root / "src" / "shaders" / "basic.vert";
     const std::filesystem::path fsPath = root / "src" / "shaders" / "basic.frag";
 
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
             }
 
             float dx = (float)(x - lastX);
-            float dy = (float)(lastY - y); // invert Y
+            float dy = (float)(lastY - y);
             lastX = x;
             lastY = y;
 
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
         glClearColor(clearGray, clearGray, clearGray, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::vec3 eyePos = cam.EyePosition();
+        glm::vec3 eyePos = cam.pos;
         glm::mat4 viewProj = cam.Projection(aspect) * cam.View();
 
         std::array<glm::vec3, kMaxLights> lightPositions;
@@ -228,21 +228,21 @@ int main(int argc, char **argv)
         ImGui::Text("  Move (WASD)  ");
         ImGui::Text("  Up (Space)  ");
         ImGui::Text("  Down (LCtrl)  ");
-        ImGui::Text("  Camera offsets (scroll wheel)  ");
+        ImGui::Text("  Projection blend (scroll wheel)  ");
         ImGui::Separator();
 
         ImGui::Text("Model 1: %s", model_1.label.c_str());
         ImGui::PushID("Model1");
         ImGui::DragFloat3("Translate", &model_1.userT.x, 0.01f);
         ImGui::DragFloat3("Rotate (deg)", &model_1.userRdeg.x, 0.5f);
-        ImGui::DragFloat3("Scale", &model_1.userS.x, 0.01f, 0.0001f, 1000.0f);
+        ImGui::DragFloat3("Scale", &model_1.userS.x, 0.01f, -1000.0f, 1000.0f);
         ImGui::PopID();
 
         ImGui::Text("Model 2: %s", model_2.label.c_str());
         ImGui::PushID("Model2");
         ImGui::DragFloat3("Translate", &model_2.userT.x, 0.01f);
         ImGui::DragFloat3("Rotate (deg)", &model_2.userRdeg.x, 0.5f);
-        ImGui::DragFloat3("Scale", &model_2.userS.x, 0.01f, 0.0001f, 1000.0f);
+        ImGui::DragFloat3("Scale", &model_2.userS.x, 0.01f, -1000.0f, 1000.0f);
         ImGui::PopID();
         ImGui::Separator();
 
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
             cam.pos = glm::vec3(0.0f, 0.5f, 3.0f);
             cam.yawDeg = -90.0f;
             cam.pitchDeg = 0.0f;
-            cam.forwardOffset = 0.0f;
+            cam.projectionBlend = 0.0f;
         }
 
         ImGui::End();

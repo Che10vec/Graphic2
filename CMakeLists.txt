@@ -84,9 +84,6 @@ glm
 tinygltf 
 imgui
 )
-target_compile_definitions(${PROJECT_NAME} PRIVATE 
-    PROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}"
-)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${glad_SOURCE_DIR}/include

@@ -12,7 +12,7 @@
 /// @struct Camera
 /// @brief Represents a 3D camera with position, rotation, and projection settings.
 /// This structure manages camera properties including position, orientation (yaw/pitch),
-/// field of view, and movement/mouse sensitivity parameters. It provides methods to
+/// projection blend, and movement/mouse sensitivity parameters. It provides methods to
 /// compute view and projection matrices for rendering.
 struct Camera
 {
@@ -22,16 +22,13 @@ struct Camera
     float yawDeg = -90.0f; 
     /// @brief Pitch rotation in degrees (vertical angle)
     float pitchDeg = 0.0f;
-    /// @brief Field of view in degrees
-    float fovDeg = 60.0f;
+    /// @brief Blend factor from perspective (0.0) to orthographic (1.0)
+    float projectionBlend = 0.0f;
 
     /// @brief Movement speed for keyboard input (units per second)
     float moveSpeed = 3.5f;
     /// @brief Mouse sensitivity multiplier
     float mouseSens = 0.12f;
-
-    /// @brief Forward camera offset (applied on top of `pos`, does not modify `pos`)
-    float forwardOffset = 0.0f;
 
     /// @brief Compute the forward direction vector based on yaw and pitch.
     /// @return Normalized forward direction vector
@@ -53,39 +50,22 @@ struct Camera
         return glm::normalize(glm::cross(Forward(), glm::vec3(0, 1, 0)));
     }
 
-    /// @brief Compute the effective camera eye position including forward offset.
-    /// @return Eye position used for view and shading calculations.
-    glm::vec3 EyePosition() const
-    {
-        return pos + Forward() * forwardOffset;
-    }
-
     /// @brief Compute the view matrix for this camera.
     /// @return 4x4 view transformation matrix
     glm::mat4 View() const
     {
-        glm::vec3 eye = EyePosition();
-        return glm::lookAt(eye, eye + Forward(), glm::vec3(0, 1, 0));
+        return glm::lookAt(pos, pos + Forward(), glm::vec3(0, 1, 0));
     }
 
-    /// @brief Offset the camera forward/backward without modifying base `pos`.
-    /// @param delta Amount to add to `forwardOffset`.
-    /// @param minOffset Minimum allowed forward offset.
-    /// @param maxOffset Maximum allowed forward offset.
-    void OffsetForward(float delta, float minOffset = -500.0f, float maxOffset = 500.0f)
-    {
-        forwardOffset = glm::clamp(forwardOffset + delta, minOffset, maxOffset);
-    }
-
-    /// @brief Handle a mouse-wheel scroll event by applying forward offset.
+    /// @brief Handle a mouse-wheel scroll event by blending toward orthographic projection.
     /// @param xoffset Horizontal scroll delta (ignored by this implementation).
     /// @param yoffset Vertical scroll delta (positive typically means wheel up).
-    /// @note This updates `forwardOffset` only; base camera `pos` is unchanged.
+    /// @note 0.0 is full perspective and 1.0 is full orthographic.
     void HandleScroll(double xoffset, double yoffset)
     {
         (void)xoffset;
-        const float wheelScale = 0.12f;
-        OffsetForward((float)yoffset * moveSpeed * wheelScale);
+        const float blendStep = 0.08f;
+        projectionBlend = glm::clamp(projectionBlend + (float)yoffset * blendStep, 0.0f, 1.0f);
     }
 
     /// @brief GLFW-compatible scroll callback that forwards to the `Camera` instance
@@ -108,10 +88,23 @@ struct Camera
 
     /// @brief Compute the projection matrix for this camera.
     /// @param aspect The aspect ratio (width/height) of the viewport
-    /// @return 4x4 perspective projection matrix
+    /// @return 4x4 blended projection matrix
     glm::mat4 Projection(float aspect) const
     {
-        return glm::perspective(glm::radians(fovDeg), aspect, 0.05f, 500.0f);
+        constexpr float kVerticalFovDeg = 60.0f;
+        const float nearPlane = 0.05f;
+        const float farPlane = 500.0f;
+
+        glm::mat4 perspective = glm::perspective(glm::radians(kVerticalFovDeg), aspect, nearPlane, farPlane);
+
+        const float orthoReferenceDistance = 6.0f;
+        const float orthoHalfHeight = tanf(glm::radians(kVerticalFovDeg * 0.5f)) * orthoReferenceDistance;
+        const float orthoHalfWidth = orthoHalfHeight * aspect;
+        glm::mat4 ortho = glm::ortho(-orthoHalfWidth, orthoHalfWidth,
+                                     -orthoHalfHeight, orthoHalfHeight,
+                                     nearPlane, farPlane);
+
+        return perspective * (1.0f - projectionBlend) + ortho * projectionBlend;
     }
 };
 
